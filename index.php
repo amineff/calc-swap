@@ -17,7 +17,7 @@ use Carbon\Carbon;
 // define variables and set to empty values
 $durationErr = $prepaidErr = $paid_failedErr = $swapDateErr = "";
 $duration = $prepaid = $paid_failed= 0;
-$swap_date = Carbon::now()->format('Y-m-d');
+$swap_date = Carbon::now()->addDays(1)->format('Y-m-d');
 $start_date = Carbon::now()->format('Y-m-d');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
