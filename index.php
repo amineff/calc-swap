@@ -15,7 +15,7 @@ require 'vendor/autoload.php';
 use Carbon\Carbon;
 
 // define variables and set to empty values
-$durationErr = $prepaidErr = $paid_failedErr = "";
+$durationErr = $prepaidErr = $paid_failedErr = $swapDateErr = "";
 $duration = $prepaid = $paid_failed= 0;
 $swap_date = Carbon::now()->format('Y-m-d');
 $start_date = Carbon::now()->format('Y-m-d');
@@ -40,10 +40,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
 
+
+
     $frequency = $_POST["frequency"];
     $paid_failed = $_POST["paid_failed"];
     $start_date = $_POST["start_date"];
     $swap_date = $_POST["swap_date"];
+    $subscription_end = add_date_by_frequency($start_date, $frequency, $duration);
+
+
+    if(Carbon::make($swap_date)->lt($start_date)) {
+        $swapDateErr = "Swap dates has to be greater than the start date!";
+    }
+
+    if(Carbon::make($swap_date)->gt($subscription_end)) {
+        $swapDateErr = "Swap dates exceeds the end date";
+    }
+
 }
 
 function test_input($data) {
@@ -72,6 +85,7 @@ function test_input($data) {
     Start date: <input type="date" id="start_date" name="start_date" value="<?php echo $start_date;?>">
     <br><br>
     Swap date: <input type="date" id="swap_date" name="swap_date" value="<?php echo $swap_date;?>">
+    <span class="error"> <?php echo $swapDateErr;?></span>
     <br><br>
     <label for="Subscription frequency">Subscription frequency:</label>
     <select name="frequency" id="frequency">
@@ -136,7 +150,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     echo str_repeat("<br>", 1);
 
 
-    $subscription_end = add_date_by_frequency($start_date, $frequency, $duration);
 
 
     echo "<br>";
