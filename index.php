@@ -88,6 +88,19 @@ function test_input($data) {
 
 <?php
 
+function create_rps($date, $frequency, $num_rps_created = 1)
+{
+    $i = 0;
+    echo $num_rps_created . ' Recurring payments will be created with those billing dates';
+    while ($i < $num_rps_created) {
+        echo "RP:" . $i;
+        echo "<br>";
+        echo "Billing_date:" . add_date_by_frequency($date, $frequency, $i);
+        echo "<br><br>";
+        $i++;
+    }
+}
+
      function add_date_by_frequency($date, $frequency, $length = 1)
     {
 
@@ -134,13 +147,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     echo 'Subscription_start:' . $start_date . str_repeat("<br>", 1);
     echo 'Subscription_end:' . $subscription_end . str_repeat("<br>", 2);
 
+
+
+
     echo "<h2>If swapped:</h2>";
 
 
     $subscription_duration  = ($duration - $prepaid) - $paid_failed;
     echo  'Original subscription_duration:'. $subscription_duration. str_repeat("<br>", 1);
-    echo "<br><br>";
-
 
     $time = Carbon::make($swap_date)->diff($start_date);
     $diff_months = ($time->y ? $time->y * 12 : $time->m);
@@ -161,15 +175,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $diff_subscription_duration = match ($frequency) {
         'daily' =>  Carbon::make($swap_date)->startOfDay()->diffInDays($subscription_end),
         'weekly' =>  Carbon::make($swap_date)->startOfDay()->diffInWeeks($subscription_end),
-        'monthly' =>  Carbon::make($swap_date)->startOfDay()->diffInMonths($subscription_end),
+        'monthly' =>  Carbon::make($swap_date)->startOfDay()->diffInMonths($subscription_end) + 1,
         'yearly' =>  Carbon::make($swap_date)->startOfDay()->diffInYears($subscription_end),
     };
 
     //echo  $settled;
-    $subscription_duration1 = ($diff_subscription_duration - $paid_failed);
+     $diff_months_start_date= Carbon::make($swap_date)->startOfDay()->diffInMonths($start_date);
+
+   // $remaining_failed_paid = 0;
+   //  if($diff_months_start_date > $prepaid)
+  //       $remaining_failed_paid = $paid_failed - ($diff_months_start_date - $prepaid);
+
+
+    $subscription_duration1 = ($diff_subscription_duration);
     $subscription_duration_prepaid1
-        = max($prepaid
+        = max(($prepaid + $paid_failed)
         - Carbon::make($swap_date)->startOfDay()->diffInMonths($start_date), 0);
+
 
 
     echo "<h2>Formulas:</h2>";
@@ -179,9 +201,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     echo 'Subscription_duration_prepaid:' . $subscription_duration_prepaid1;
     echo "<br>";
 
-    $diff_months = Carbon::make($swap_date)->diffInMonths($start_date);
-    $another_subscription_duration = (($duration ) - $paid_failed) - $diff_months;
-    echo 'Subscription_duration__formula_calc_from_start_date:' . $another_subscription_duration;
+    //$diff_months = Carbon::make($swap_date)->diffInMonths($start_date);
+    //$another_subscription_duration = (($duration ) - $paid_failed) - $diff_months;
+    //echo 'Subscription_duration__formula_calc_from_start_date:' . $another_subscription_duration;
 
 }
 ?>
