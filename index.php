@@ -188,7 +188,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $diff_subscription_duration = match ($frequency) {
         'daily' =>  Carbon::make($swap_date)->startOfDay()->diffInDays($subscription_end),
         'weekly' =>  Carbon::make($swap_date)->startOfDay()->diffInWeeks($subscription_end),
-        'monthly' =>  Carbon::make($swap_date)->startOfDay()->diffInMonths($subscription_end),
+        'monthly' =>  Carbon::make($swap_date)->startOfDay()->diffInMonths($subscription_end) + 1,
         'yearly' =>  Carbon::make($swap_date)->startOfDay()->diffInYears($subscription_end),
     };
 
