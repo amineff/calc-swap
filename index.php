@@ -138,15 +138,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 
     $subscription_duration  = ($duration - $prepaid) - $paid_failed;
-    echo  'Original subscription_duration:'. $subscription_duration. str_repeat("<br>", 1). str_repeat("<br>", 1);
+    echo  'Original subscription_duration:'. $subscription_duration. str_repeat("<br>", 1);
+    echo "<br>";
 
 
     $time = Carbon::make($swap_date)->diff($start_date);
     $diff_months = ($time->y ? $time->y * 12 : $time->m);
-    echo "Diffrence between subscription_start date and swap date: months:{$diff_months} days:{$time->d}" . str_repeat("<br>", 1);;
+    echo "Diffrence between subscription_start date and swap date: months:{$diff_months} days:{$time->d}";
+    echo "<br>";
     $time = Carbon::make($swap_date)->diff($subscription_end);
     $diff_months = ($time->y ? $time->y * 12 : $time->m);
-    echo "Diffrence between subscription_end date and swap date: months:{$diff_months} days:{$time->d}" . str_repeat("<br>", 1);;
+    echo "Diffrence between subscription_end date and swap date: months:{$diff_months} days:{$time->d}";
+    echo "<br>";
 
 
    // echo Carbon::now()->diffInMonths($current_date);
@@ -168,12 +171,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         - Carbon::make($swap_date)->startOfDay()->diffInMonths($start_date), 0);
 
 
-    echo 'Subscription_duration_formula_calc_from_end_date:' . $subscription_duration1 . str_repeat("<br>", 1);
-    echo 'Subscription_duration_prepaid:' . $subscription_duration_prepaid1 . str_repeat("<br>", 1);
+    echo 'Subscription_duration_formula_calc_from_end_date:' . $subscription_duration1;
+    echo "<br>";
+    echo "<br>";
+
+    echo 'Subscription_duration_prepaid:' . $subscription_duration_prepaid1;
+    echo "<br>";
+    echo "<br>";
 
     $diff_months = Carbon::make($swap_date)->diffInMonths($start_date);
     $another_subscription_duration = (($duration ) - $paid_failed) - $diff_months;
-    echo 'Subscription_duration__formula_calc_from_start_date:' . $another_subscription_duration . str_repeat("<br>", 1);
+    echo 'Subscription_duration__formula_calc_from_start_date:' . $another_subscription_duration;
 
 }
 ?>
