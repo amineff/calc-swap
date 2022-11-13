@@ -107,7 +107,7 @@ function test_input($data) {
                 break;
         }
 
-        return date('Y-m-d H:i:s', strtotime($date . $period));
+        return date('Y-m-d', strtotime($date . $period));
     }
 
 
