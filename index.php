@@ -131,25 +131,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     echo '------------------  Results  -----------------' . "<br>";
 
 
-    echo 'subscription_start:' . $start_date . str_repeat("<br>", 1);
-    echo 'subscription_end:' . $subscription_end . str_repeat("<br>", 2);
+    echo 'Subscription_start:' . $start_date . str_repeat("<br>", 1);
+    echo 'Subscription_end:' . $subscription_end . str_repeat("<br>", 2);
 
     echo "<h2>If swapped:</h2>";
 
 
     $subscription_duration  = ($duration - $prepaid) - $paid_failed;
     echo  'Original subscription_duration:'. $subscription_duration. str_repeat("<br>", 1);
-    echo "<br>";
+    echo "<br><br>";
 
 
     $time = Carbon::make($swap_date)->diff($start_date);
     $diff_months = ($time->y ? $time->y * 12 : $time->m);
-    echo "Diffrence between subscription_start date and swap date: months:{$diff_months} days:{$time->d}";
+    echo "Diffrence between subscription_start date and swap date {$diff_months}:months {$time->d}:days";
     echo "<br>";
+
     $time = Carbon::make($swap_date)->diff($subscription_end);
     $diff_months = ($time->y ? $time->y * 12 : $time->m);
-    echo "Diffrence between subscription_end date and swap date: months:{$diff_months} days:{$time->d}";
-    echo "<br>";
+    echo "Diffrence between subscription_end date and swap date {$diff_months}:months {$time->d}:days";
+    echo "<br><br>";
 
 
    // echo Carbon::now()->diffInMonths($current_date);
@@ -171,12 +172,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         - Carbon::make($swap_date)->startOfDay()->diffInMonths($start_date), 0);
 
 
+    echo "<h2>Formulas:</h2>";
+
     echo 'Subscription_duration_formula_calc_from_end_date:' . $subscription_duration1;
     echo "<br>";
-    echo "<br>";
-
     echo 'Subscription_duration_prepaid:' . $subscription_duration_prepaid1;
-    echo "<br>";
     echo "<br>";
 
     $diff_months = Carbon::make($swap_date)->diffInMonths($start_date);
