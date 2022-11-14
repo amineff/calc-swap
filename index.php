@@ -204,7 +204,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $subscription_duration1 = ($diff_subscription_duration);
     $subscription_duration_prepaid1
         = max(($prepaid + $paid_failed)
-        - Carbon::make($swap_date)->startOfDay()->diffInMonths($start_date), 0);
+        - $diff_months_start_date, 0);
 
 
 
