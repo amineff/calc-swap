@@ -168,6 +168,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $subscription_duration  = ($duration - $prepaid) - $paid_failed;
     echo  'Original subscription_duration:'. $subscription_duration. str_repeat("<br>", 1);
+    echo  'Original Subscription_duration_prepaid:0' . str_repeat("<br>", 1);
 
     $time = Carbon::make($swap_date)->diff($start_date);
     $diff_months = ($time->y ? $time->y * 12 : $time->m);
