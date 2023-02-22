@@ -14,11 +14,13 @@ require 'vendor/autoload.php';
 
 use Carbon\Carbon;
 
+
 // define variables and set to empty values
-$durationErr = $prepaidErr = $paid_failedErr = $swapDateErr = "";
-$duration = $prepaid = $paid_failed= 0;
+$durationErr = $prepaidErr = $paid_failedErr = $formula = $swapDateErr = "";
+$duration = $prepaid = $paid_failed = 0;
 $swap_date = Carbon::now()->addDays(1)->format('Y-m-d');
 $start_date = Carbon::now()->format('Y-m-d');
+$order_item_billing_date = Carbon::now()->subDays(1)->format('Y-m-d');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
@@ -43,8 +45,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 
     $frequency = $_POST["frequency"];
+    $formula = $_POST["formula"];
     $paid_failed = $_POST["paid_failed"];
     $start_date = $_POST["start_date"];
+    $order_item_billing_date = $_POST["order_item_billing_date"];
     $swap_date = $_POST["swap_date"];
     $subscription_end = add_date_by_frequency($start_date, $frequency, $duration);
 
@@ -84,6 +88,8 @@ function test_input($data) {
     <br><br>
     Start date: <input type="date" id="start_date" name="start_date" value="<?php echo $start_date;?>">
     <br><br>
+    Order item first billing date: <input type="date" id="order_item_start_date" name="order_item_billing_date" value="<?php echo $order_item_billing_date;?>">
+    <br><br>
     Swap date: <input type="date" id="swap_date" name="swap_date" value="<?php echo $swap_date;?>">
     <span class="error"> <?php echo $swapDateErr;?></span>
     <br><br>
@@ -95,6 +101,13 @@ function test_input($data) {
         <option value="yearly">yearly</option>
     </select>
     <br><br>
+    <label for="Formulas">Formula:</label>
+    <select name="formula" id="frequency">
+        <option value="oldest">Oldest</option>
+        <option value="dec">Dec</option>
+        <option value="current">Current</option>
+        <option value="suggested">Suggested</option>
+    </select>
     <br><br>
     <input type="submit" name="Calc swap" value="Submit">
 </form>
@@ -104,13 +117,17 @@ function test_input($data) {
 
 function create_rps($date, $frequency, $num_rps_created = 1)
 {
+    if(1 > $num_rps_created)
+    {
+        echo  str_repeat("<br>", 1) . "No recurring payments will be created !" .str_repeat("<br>", 2);
+        return;
+    }
+
     $i = 0;
-    echo $num_rps_created . ' Recurring payments will be created with those billing dates';
+    echo  str_repeat("<br>", 1) . "{$num_rps_created} recurring payments will be created with these billing dates:" .str_repeat("<br>", 2);
     while ($i < $num_rps_created) {
-        echo "RP:" . $i;
-        echo "<br>";
-        echo "Billing_date:" . add_date_by_frequency($date, $frequency, $i);
-        echo "<br><br>";
+        echo "RP:" . ($i+1) . str_repeat("<br>", 1);
+        echo "Billing_date:" . add_date_by_frequency($date, $frequency, $i) . str_repeat("<br>", 2);
         $i++;
     }
 }
@@ -143,32 +160,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 
 
-    echo "<h2>Results:</h2>";
+    echo "<h2>Parameters:</h2>";
     echo 'Duration:'. $duration;
     echo str_repeat("<br>", 1);
     echo 'Prepaid:'. $prepaid;
-    echo str_repeat("<br>", 1);
-
-
-
-
-    echo "<br>";
-
-    echo '------------------  Results  -----------------' . "<br>";
-
-
+    echo str_repeat("<br>", 2);
     echo 'Subscription_start:' . $start_date . str_repeat("<br>", 1);
     echo 'Subscription_end:' . $subscription_end . str_repeat("<br>", 2);
 
+    $first_billing_date = add_date_by_frequency(
+        $start_date,
+        $frequency,
+        $prepaid
+    );
 
+    if (
+        !is_null($order_item_billing_date) &&
+        strtotime($order_item_billing_date) > strtotime($first_billing_date)
+    ) {
+        $first_billing_date = $order_item_billing_date;
+    }
 
+    echo 'First_billing_date:' . $first_billing_date . str_repeat("<br>", 2);
 
-    echo "<h2>If swapped:</h2>";
-
-
-    $subscription_duration  = ($duration - $prepaid) - $paid_failed;
-    echo  'Original subscription_duration:'. $subscription_duration. str_repeat("<br>", 1);
-    echo  'Original Subscription_duration_prepaid:0' . str_repeat("<br>", 1);
 
     $time = Carbon::make($swap_date)->diff($start_date);
     $diff_months = ($time->y ? $time->y * 12 : $time->m);
@@ -181,10 +195,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     echo "<br><br>";
 
 
-   // echo Carbon::now()->diffInMonths($current_date);
-    //echo Carbon::make($current_date)->diffInMonths(Carbon::now());
-    //echo Carbon::make($current_date)->diffInMonths($subscription_end);
+    switch ($formula) {
+        case 'oldest':
+            print_oldest_results();
+            break;
+        case 'dec':
+            print_dec_results();
+            break;
+        case 'current':
+            print_current_results();
+            break;
+        case 'suggested':
+            print_suggested_results();
+            break;
+        default:
+    }
 
+    //$diff_months = Carbon::make($swap_date)->diffInMonths($start_date);
+    //$another_subscription_duration = (($duration ) - $paid_failed) - $diff_months;
+    //echo 'Subscription_duration__formula_calc_from_start_date:' . $another_subscription_duration;
+
+}
+
+function print_oldest_results()
+{
+    global $first_billing_date, $frequency, $duration, $prepaid, $paid_failed;
+    $subscription_duration  = ($duration - $prepaid) - $paid_failed;
+    $number_of_rps = $subscription_duration;
+    echo "<h2>Oldest formula:</h2>";
+    echo  'Original subscription_duration:'. $subscription_duration. str_repeat("<br>", 1);
+    echo  'Original Subscription_duration_prepaid:0' . str_repeat("<br>", 1);
+    create_rps($first_billing_date, $frequency, $number_of_rps);
+    echo "<br>";
+}
+
+function print_dec_results()
+{
+    global $start_date, $subscription_end, $swap_date, $first_billing_date, $frequency, $duration, $prepaid, $paid_failed;
+    echo "<h2>Dec formula:</h2>";
 
     $diff_subscription_duration = match ($frequency) {
         'daily' =>  Carbon::make($swap_date)->startOfDay()->diffInDays($subscription_end),
@@ -194,34 +242,126 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     };
 
     //echo  $settled;
-     $diff_months_start_date= Carbon::make($swap_date)->startOfDay()->diffInMonths($start_date);
+    $diff_months_start_date= Carbon::make($swap_date)->startOfDay()->diffInMonths($start_date);
 
-   // $remaining_failed_paid = 0;
-   //  if($diff_months_start_date > $prepaid)
-  //       $remaining_failed_paid = $paid_failed - ($diff_months_start_date - $prepaid);
-
-
-    $subscription_duration1 = ($diff_subscription_duration);
-    $subscription_duration_prepaid1
+    $subscription_duration = ($diff_subscription_duration);
+    $subscription_duration_prepaid
         = max(($prepaid + $paid_failed)
         - $diff_months_start_date, 0);
 
-
-
-    echo "<h2>Formulas:</h2>";
-
-    echo 'Subscription_duration_formula_calc_from_end_date:' . $subscription_duration1;
+    $number_of_rps = ($subscription_duration - $subscription_duration_prepaid);
+    echo 'Subscription_duration_formula_calc_from_end_date:' . $subscription_duration;
     echo "<br>";
-    echo 'Subscription_duration_prepaid:' . $subscription_duration_prepaid1;
+    echo 'Subscription_duration_prepaid:' . $subscription_duration_prepaid;
     echo "<br>";
-    echo 'Number of rps :' . ($subscription_duration1 - $subscription_duration_prepaid1);
-    echo "<br>";
-
-    //$diff_months = Carbon::make($swap_date)->diffInMonths($start_date);
-    //$another_subscription_duration = (($duration ) - $paid_failed) - $diff_months;
-    //echo 'Subscription_duration__formula_calc_from_start_date:' . $another_subscription_duration;
+    create_rps($first_billing_date, $frequency, $number_of_rps);
 
 }
+
+function print_current_results()
+{
+    global $start_date, $subscription_end, $swap_date, $first_billing_date, $frequency, $duration, $prepaid, $paid_failed;
+    echo "<h2>Current formula:</h2>";
+
+    $diff_subscription_duration = match ($frequency) {
+        'daily' =>  Carbon::make($swap_date)->startOfDay()->diffInDays($subscription_end),
+        'weekly' =>  Carbon::make($swap_date)->startOfDay()->diffInWeeks($subscription_end),
+        'monthly' =>  Carbon::make($swap_date)->startOfDay()->diffInMonths($subscription_end) + 1,
+        'yearly' =>  Carbon::make($swap_date)->startOfDay()->diffInYears($subscription_end),
+    };
+
+    //echo  $settled;
+    $diff_months_start_date= Carbon::make($swap_date)->startOfDay()->diffInMonths($start_date);
+
+    $subscription_duration = ($diff_subscription_duration);
+    $subscription_duration_prepaid
+        = max(($prepaid + $paid_failed)
+        - $diff_months_start_date, 0);
+
+    $number_of_rps = ($subscription_duration - $subscription_duration_prepaid);
+    if( $subscription_duration_prepaid > 1 ){
+        $number_of_rps = round($number_of_rps / $subscription_duration_prepaid,0);
+    }
+
+    $number_of_rps = ($number_of_rps == 1) ? 0 : $number_of_rps;
+
+    echo 'Subscription_duration_formula_calc_from_end_date:' . $subscription_duration;
+    echo "<br>";
+    echo 'Subscription_duration_prepaid:' . $subscription_duration_prepaid;
+    echo "<br>";
+    create_rps($first_billing_date, $frequency, $number_of_rps);
+}
+
+
+
+function print_improved_results()
+{
+    global $start_date, $subscription_end, $swap_date, $first_billing_date, $frequency, $duration, $prepaid, $paid_failed;
+    echo "<h2>Current formula:</h2>";
+
+    $diff_subscription_duration = match ($frequency) {
+        'daily' =>  Carbon::make($swap_date)->startOfDay()->diffInDays($subscription_end),
+        'weekly' =>  Carbon::make($swap_date)->startOfDay()->diffInWeeks($subscription_end),
+        'monthly' =>  Carbon::make($swap_date)->startOfDay()->diffInMonths($subscription_end) + 1,
+        'yearly' =>  Carbon::make($swap_date)->startOfDay()->diffInYears($subscription_end),
+    };
+
+    //echo  $settled;
+    $diff_months_start_date= Carbon::make($swap_date)->startOfDay()->diffInMonths($start_date);
+
+    $subscription_duration = ($diff_subscription_duration);
+    $subscription_duration_prepaid
+        = max(($prepaid + $paid_failed)
+        - $diff_months_start_date, 0);
+
+    $number_of_rps = ($subscription_duration - $subscription_duration_prepaid);
+    if( $subscription_duration_prepaid > 1 ){
+        $number_of_rps = round($number_of_rps / $subscription_duration_prepaid,0);
+    }
+
+    $number_of_rps = ($number_of_rps == 1) ? 0 : $number_of_rps;
+
+    echo 'Subscription_duration_formula_calc_from_end_date:' . $subscription_duration;
+    echo "<br>";
+    echo 'Subscription_duration_prepaid:' . $subscription_duration_prepaid;
+    echo "<br>";
+    create_rps($first_billing_date, $frequency, $number_of_rps);
+}
+
+
+function print_suggested_results()
+{
+    global $start_date, $subscription_end, $swap_date, $first_billing_date, $frequency, $duration, $prepaid, $paid_failed;
+    echo "<h2>Current formula:</h2>";
+    $deduct_period = 1;
+    if(15 > Carbon::make($swap_date)->startOfDay()->diffInDays($subscription_end) )
+    {
+        $deduct_period = 0;
+    }
+
+    $diff_subscription_duration = match ($frequency) {
+        'daily' =>  Carbon::make($swap_date)->startOfDay()->diffInDays($subscription_end),
+        'weekly' =>  Carbon::make($swap_date)->startOfDay()->diffInWeeks($subscription_end),
+        'monthly' =>  Carbon::make($swap_date)->startOfDay()->diffInMonths($subscription_end) + $deduct_period,
+        'yearly' =>  Carbon::make($swap_date)->startOfDay()->diffInYears($subscription_end),
+    };
+
+    //echo  $settled;
+    $diff_months_start_date= Carbon::make($swap_date)->startOfDay()->diffInMonths($start_date);
+
+    $subscription_duration = ($diff_subscription_duration);
+    $subscription_duration_prepaid
+        = max(($prepaid + $paid_failed)
+        - $diff_months_start_date, 0);
+
+    $number_of_rps = ($subscription_duration - $subscription_duration_prepaid);
+    echo 'Subscription_duration_formula_calc_from_end_date:' . $subscription_duration;
+    echo "<br>";
+    echo 'Subscription_duration_prepaid:' . $subscription_duration_prepaid;
+    echo "<br>";
+    create_rps($first_billing_date, $frequency, $number_of_rps);
+}
+
 ?>
 
 
