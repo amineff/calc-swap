@@ -36,21 +36,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     $prepaid = $_POST["prepaid"];
-
     // check if name only contains letters and whitespace
     if (filter_var($prepaid, FILTER_VALIDATE_INT)  === false) {
         $prepaidErr = "Only numbers are allowed";
     }
 
-
     $frequency = $_POST["frequency"];
     $formula = $_POST["formula"];
-    $divide_rp = $_POST["divide_rp"] ?? false;
     $paid_failed = $_POST["paid_failed"];
     $start_date = $_POST["start_date"];
     $swap_subscription_start_date = $_POST["swap_subscription_start_date"];
     $swap_date = $_POST["swap_date"];
     $subscription_end = add_date_by_frequency($start_date, $frequency, $duration);
+    $divide_rp = match ($formula) {
+        'oldest', 'dec'  =>  false,
+        default =>  $_POST["divide_rp"] ?? false
+    };
 
     if(Carbon::make($swap_date)->lte($start_date)) {
         $swapDateErr = "Swap dates has to be greater than the start date!";
@@ -59,7 +60,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if(Carbon::make($swap_date)->gt($subscription_end)) {
         $swapDateErr = "Swap dates exceeds the end date";
     }
-
 }
 
 function test_input($data) {
