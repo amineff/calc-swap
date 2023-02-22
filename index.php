@@ -82,7 +82,7 @@ function test_input($data) {
     Prepaid: <input type="text" name="prepaid" value="<?php echo $prepaid;?>">
     <span class="error">* <?php echo $prepaidErr;?></span>
     <br><br>
-    Paid / failed: <input type="text" name="paid_failed" value="<?php echo $paid_failed;?>">
+    Paid / failed RPs: <input type="text" name="paid_failed" value="<?php echo $paid_failed;?>">
     <span class="error"> <?php echo $paid_failedErr;?></span>
     <br><br>
     Start date: <input type="date" id="start_date" name="start_date" value="<?php echo $start_date;?>">
