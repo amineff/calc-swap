@@ -16,7 +16,7 @@ use Carbon\Carbon;
 
 
 // define variables and set to empty values
-$durationErr = $prepaidErr = $paid_failedErr = $formula = $swapDateErr = "";
+$durationErr = $prepaidErr = $paid_failedErr = $formula = $swapDateErr = $subscriptionSwapDateErr = "";
 $duration = $prepaid = $paid_failed = 0;
 $divide_rp = true;
 $swap_date = Carbon::now()->addDays(1)->format('Y-m-d');
@@ -60,6 +60,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if(Carbon::make($swap_date)->gt($subscription_end)) {
         $swapDateErr = "Swap dates exceeds the end date";
     }
+
+    if(Carbon::make($swap_subscription_start_date)->lte($swap_date)) {
+        $subscriptionSwapDateErr = "Swap subscription start date to be greater than the swap date!";
+    }
 }
 
 function test_input($data) {
@@ -91,6 +95,7 @@ function test_input($data) {
     <span class="error"> <?php echo $swapDateErr;?></span>
     <br><br>
     Swap subscription (start date): <input type="date" id="swap_subscription_start_date" name="swap_subscription_start_date" value="<?php echo $swap_subscription_start_date;?>">
+    <span class="error"> <?php echo $subscriptionSwapDateErr;?></span>
     <br><br>
     <label for="Subscription frequency">Subscription frequency:</label>
     <select name="frequency" id="frequency">
@@ -324,8 +329,8 @@ function print_suggested_results()
     $number_of_rps = ($subscription_duration - $subscription_duration_prepaid);
     if($divide_rp)
     {
-        if( $subscription_duration_prepaid > 1 ){
-            $number_of_rps = round($number_of_rps / $subscription_duration_prepaid,0);
+        if( $prepaid > 1 ){
+            $number_of_rps = round($number_of_rps / $prepaid,0);
         }
 
         $number_of_rps = ($number_of_rps == 1) ? 0 : $number_of_rps;
