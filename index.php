@@ -137,7 +137,7 @@ function create_rps($date, $frequency, $num_rps_created, $price, $total)
     $rp_amount = $price;
 
     $i = 0;
-    echo  str_repeat("<br>", 1) . "{$num_rps_created} recurring payments will be created with these billing dates:" .str_repeat("<br>", 2);
+    echo  str_repeat("<br>", 1) . "{$num_rps_created} recurring payments will be created with these billing dates and amounts:" .str_repeat("<br>", 2);
     while ($i < $num_rps_created) {
         echo "RP:" . ($i+1) . str_repeat("<br>", 1);
         echo "Billing_date:" . add_date_by_frequency($date, $frequency, $i) . " amount:{$rp_amount}".str_repeat("<br>", 2);
