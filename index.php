@@ -49,7 +49,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $swap_date = $_POST["swap_date"];
     $subscription_end = add_date_by_frequency($start_date, $frequency, $duration);
     $divide_rp = match ($formula) {
-        'oldest', 'dec'  =>  false,
+        'oldest'  =>  false,
         default =>  $_POST["divide_rp"] ?? false
     };
 
@@ -109,7 +109,7 @@ function test_input($data) {
     </select>
     <br><br>
     <input type="checkbox" id="divide_rp" name="divide_rp" value="divide" <?php if($divide_rp){echo("checked");}?>  >
-    <label for="divide_rp">Divide RPs by prepaid ( works only on current or suggested)</label><br><br>
+    <label for="divide_rp">Divide RPs by prepaid ( works only on dec, current or suggested )</label><br><br>
     <input type="submit" name="Calc swap" value="Submit">
 </form>
 
@@ -225,7 +225,7 @@ function print_oldest_results()
 
 function print_dec_results()
 {
-    global $start_date, $subscription_end, $swap_date, $first_billing_date, $frequency, $duration, $prepaid, $paid_failed;
+    global $divide_rp, $start_date, $subscription_end, $swap_date, $first_billing_date, $frequency, $duration, $prepaid, $paid_failed;
     echo "<h2>Dec formula:</h2>";
 
     $diff_subscription_duration = match ($frequency) {
@@ -244,6 +244,13 @@ function print_dec_results()
         - $diff_months_start_date, 0);
 
     $number_of_rps = ($subscription_duration - $subscription_duration_prepaid);
+    if($divide_rp)
+    {
+        if( $subscription_duration_prepaid > 1 ){
+            $number_of_rps = round($number_of_rps / $subscription_duration_prepaid,0);
+        }
+    }
+
     echo 'Subscription_duration_formula_calc_from_end_date:' . $subscription_duration;
     echo "<br>";
     echo 'Subscription_duration_prepaid:' . $subscription_duration_prepaid;
