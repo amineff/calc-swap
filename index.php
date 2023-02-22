@@ -322,7 +322,7 @@ function print_improved_results()
 function print_suggested_results()
 {
     global $start_date, $subscription_end, $swap_date, $first_billing_date, $frequency, $duration, $prepaid, $paid_failed;
-    echo "<h2>Current formula:</h2>";
+    echo "<h2>Suggested formula:</h2>";
     $deduct_period = 1;
     if(15 > Carbon::make($swap_date)->startOfDay()->diffInDays($subscription_end) )
     {
