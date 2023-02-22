@@ -330,7 +330,7 @@ function print_suggested_results()
     if($divide_rp)
     {
         if( $prepaid > 1 ){
-            $number_of_rps = round($number_of_rps / $prepaid,0);
+            $number_of_rps = ceil($number_of_rps / $prepaid);
         }
 
         $number_of_rps = ($number_of_rps == 1) ? 0 : $number_of_rps;
