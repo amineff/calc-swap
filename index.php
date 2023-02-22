@@ -20,7 +20,7 @@ $durationErr = $prepaidErr = $paid_failedErr = $formula = $swapDateErr = "";
 $duration = $prepaid = $paid_failed = 0;
 $swap_date = Carbon::now()->addDays(1)->format('Y-m-d');
 $start_date = Carbon::now()->format('Y-m-d');
-$order_item_billing_date = Carbon::now()->subDays(1)->format('Y-m-d');
+$swap_subscription_start_date = Carbon::now()->format('Y-m-d');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
@@ -48,7 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $formula = $_POST["formula"];
     $paid_failed = $_POST["paid_failed"];
     $start_date = $_POST["start_date"];
-    $order_item_billing_date = $_POST["order_item_billing_date"];
+    $swap_subscription_start_date = $_POST["swap_subscription_start_date"];
     $swap_date = $_POST["swap_date"];
     $subscription_end = add_date_by_frequency($start_date, $frequency, $duration);
 
@@ -88,10 +88,10 @@ function test_input($data) {
     <br><br>
     Start date: <input type="date" id="start_date" name="start_date" value="<?php echo $start_date;?>">
     <br><br>
-    Order item first billing date: <input type="date" id="order_item_start_date" name="order_item_billing_date" value="<?php echo $order_item_billing_date;?>">
-    <br><br>
     Swap date: <input type="date" id="swap_date" name="swap_date" value="<?php echo $swap_date;?>">
     <span class="error"> <?php echo $swapDateErr;?></span>
+    <br><br>
+    Swap subscription (start date): <input type="date" id="swap_subscription_start_date" name="swap_subscription_start_date" value="<?php echo $swap_subscription_start_date;?>">
     <br><br>
     <label for="Subscription frequency">Subscription frequency:</label>
     <select name="frequency" id="frequency">
@@ -169,17 +169,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     echo 'Subscription_end:' . $subscription_end . str_repeat("<br>", 2);
 
     $first_billing_date = add_date_by_frequency(
-        $start_date,
+        $swap_subscription_start_date,
         $frequency,
         $prepaid
     );
-
-    if (
-        !is_null($order_item_billing_date) &&
-        strtotime($order_item_billing_date) > strtotime($first_billing_date)
-    ) {
-        $first_billing_date = $order_item_billing_date;
-    }
 
     echo 'First_billing_date:' . $first_billing_date . str_repeat("<br>", 2);
 
