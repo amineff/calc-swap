@@ -42,8 +42,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
 
-
-
     $frequency = $_POST["frequency"];
     $formula = $_POST["formula"];
     $paid_failed = $_POST["paid_failed"];
@@ -51,7 +49,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $swap_subscription_start_date = $_POST["swap_subscription_start_date"];
     $swap_date = $_POST["swap_date"];
     $subscription_end = add_date_by_frequency($start_date, $frequency, $duration);
-
 
     if(Carbon::make($swap_date)->lte($start_date)) {
         $swapDateErr = "Swap dates has to be greater than the start date!";
