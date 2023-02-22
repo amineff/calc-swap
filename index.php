@@ -18,6 +18,7 @@ use Carbon\Carbon;
 // define variables and set to empty values
 $durationErr = $prepaidErr = $paid_failedErr = $formula = $swapDateErr = "";
 $duration = $prepaid = $paid_failed = 0;
+$divide_rp = true;
 $swap_date = Carbon::now()->addDays(1)->format('Y-m-d');
 $start_date = Carbon::now()->format('Y-m-d');
 $swap_subscription_start_date = Carbon::now()->format('Y-m-d');
@@ -44,6 +45,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $frequency = $_POST["frequency"];
     $formula = $_POST["formula"];
+    $divide_rp = $_POST["divide_rp"] ?? false;
     $paid_failed = $_POST["paid_failed"];
     $start_date = $_POST["start_date"];
     $swap_subscription_start_date = $_POST["swap_subscription_start_date"];
@@ -92,20 +94,22 @@ function test_input($data) {
     <br><br>
     <label for="Subscription frequency">Subscription frequency:</label>
     <select name="frequency" id="frequency">
-        <option value="monthly">monthly</option>
-        <option value="weekly">weekly</option>
-        <option value="daily">daily</option>
-        <option value="yearly">yearly</option>
+        <option <?php if($frequency == 'monthly'){echo("selected");}?> value="monthly">monthly</option>
+        <option <?php if($frequency == 'weekly'){echo("selected");}?> value="weekly">weekly</option>
+        <option <?php if($frequency == 'daily'){echo("selected");}?> value="daily">daily</option>
+        <option <?php if($frequency == 'yearly'){echo("selected");}?> value="yearly">yearly</option>
     </select>
     <br><br>
     <label for="Formulas">Formula:</label>
-    <select name="formula" id="frequency">
-        <option value="oldest">Oldest</option>
-        <option value="dec">Dec</option>
-        <option value="current">Current</option>
-        <option value="suggested">Suggested</option>
+    <select name="formula" id="formula">
+        <option <?php if($formula == 'oldest'){echo("selected");}?> value="oldest">Oldest</option>
+        <option <?php if($formula == 'dec'){echo("selected");}?> value="dec">Dec</option>
+        <option <?php if($formula == 'current'){echo("selected");}?> value="current">Current</option>
+        <option <?php if($formula == 'suggested'){echo("selected");}?> value="suggested">Suggested</option>
     </select>
     <br><br>
+    <input type="checkbox" id="divide_rp" name="divide_rp" value="divide" <?php if($divide_rp){echo("checked");}?>  >
+    <label for="divide_rp">Divide RPs by prepaid ( works only on current or suggested)</label><br><br>
     <input type="submit" name="Calc swap" value="Submit">
 </form>
 
@@ -250,7 +254,7 @@ function print_dec_results()
 
 function print_current_results()
 {
-    global $start_date, $subscription_end, $swap_date, $first_billing_date, $frequency, $duration, $prepaid, $paid_failed;
+    global $divide_rp, $start_date, $subscription_end, $swap_date, $first_billing_date, $frequency, $duration, $prepaid, $paid_failed;
     echo "<h2>Current formula:</h2>";
 
     $diff_subscription_duration = match ($frequency) {
@@ -269,11 +273,14 @@ function print_current_results()
         - $diff_months_start_date, 0);
 
     $number_of_rps = ($subscription_duration - $subscription_duration_prepaid);
-    if( $subscription_duration_prepaid > 1 ){
-        $number_of_rps = round($number_of_rps / $subscription_duration_prepaid,0);
-    }
+    if($divide_rp)
+    {
+        if( $subscription_duration_prepaid > 1 ){
+            $number_of_rps = round($number_of_rps / $subscription_duration_prepaid,0);
+        }
 
-    $number_of_rps = ($number_of_rps == 1) ? 0 : $number_of_rps;
+        $number_of_rps = ($number_of_rps == 1) ? 0 : $number_of_rps;
+    }
 
     echo 'Subscription_duration_formula_calc_from_end_date:' . $subscription_duration;
     echo "<br>";
@@ -281,47 +288,10 @@ function print_current_results()
     echo "<br>";
     create_rps($first_billing_date, $frequency, $number_of_rps);
 }
-
-
-
-function print_improved_results()
-{
-    global $start_date, $subscription_end, $swap_date, $first_billing_date, $frequency, $duration, $prepaid, $paid_failed;
-    echo "<h2>Current formula:</h2>";
-
-    $diff_subscription_duration = match ($frequency) {
-        'daily' =>  Carbon::make($swap_date)->startOfDay()->diffInDays($subscription_end),
-        'weekly' =>  Carbon::make($swap_date)->startOfDay()->diffInWeeks($subscription_end),
-        'monthly' =>  Carbon::make($swap_date)->startOfDay()->diffInMonths($subscription_end) + 1,
-        'yearly' =>  Carbon::make($swap_date)->startOfDay()->diffInYears($subscription_end),
-    };
-
-    //echo  $settled;
-    $diff_months_start_date= Carbon::make($swap_date)->startOfDay()->diffInMonths($start_date);
-
-    $subscription_duration = ($diff_subscription_duration);
-    $subscription_duration_prepaid
-        = max(($prepaid + $paid_failed)
-        - $diff_months_start_date, 0);
-
-    $number_of_rps = ($subscription_duration - $subscription_duration_prepaid);
-    if( $subscription_duration_prepaid > 1 ){
-        $number_of_rps = round($number_of_rps / $subscription_duration_prepaid,0);
-    }
-
-    $number_of_rps = ($number_of_rps == 1) ? 0 : $number_of_rps;
-
-    echo 'Subscription_duration_formula_calc_from_end_date:' . $subscription_duration;
-    echo "<br>";
-    echo 'Subscription_duration_prepaid:' . $subscription_duration_prepaid;
-    echo "<br>";
-    create_rps($first_billing_date, $frequency, $number_of_rps);
-}
-
 
 function print_suggested_results()
 {
-    global $start_date, $subscription_end, $swap_date, $first_billing_date, $frequency, $duration, $prepaid, $paid_failed;
+    global $divide_rp, $start_date, $subscription_end, $swap_date, $first_billing_date, $frequency, $duration, $prepaid, $paid_failed;
     echo "<h2>Suggested formula:</h2>";
     $deduct_period = 1;
     if(15 > Carbon::make($swap_date)->startOfDay()->diffInDays($subscription_end) )
@@ -345,6 +315,14 @@ function print_suggested_results()
         - $diff_months_start_date, 0);
 
     $number_of_rps = ($subscription_duration - $subscription_duration_prepaid);
+    if($divide_rp)
+    {
+        if( $subscription_duration_prepaid > 1 ){
+            $number_of_rps = round($number_of_rps / $subscription_duration_prepaid,0);
+        }
+
+        $number_of_rps = ($number_of_rps == 1) ? 0 : $number_of_rps;
+    }
     echo 'Subscription_duration_formula_calc_from_end_date:' . $subscription_duration;
     echo "<br>";
     echo 'Subscription_duration_prepaid:' . $subscription_duration_prepaid;
