@@ -1,1 +1,3 @@
-# calc-swap
+Calc-swap
+
+Subscription duration calculator.
