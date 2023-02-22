@@ -114,7 +114,7 @@ function test_input($data) {
         <option <?php if($formula == 'oldest'){echo("selected");}?> value="oldest">Oldest</option>
         <option <?php if($formula == 'dec'){echo("selected");}?> value="dec">Dec</option>
         <option <?php if($formula == 'current'){echo("selected");}?> value="current">Current</option>
-        <option <?php if($formula == 'suggested'){echo("selected");}?> value="suggested">Suggested</option>
+        <option <?php if($formula == 'suggested'){echo("selected");}?> value="suggested">Experimental</option>
     </select>
     <br><br>
     <input type="checkbox" id="divide_rp" name="divide_rp" value="divide" <?php if($divide_rp){echo("checked");}?>  >
