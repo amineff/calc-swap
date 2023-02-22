@@ -214,6 +214,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     echo "<br>";
     echo 'Subscription_duration_prepaid:' . $subscription_duration_prepaid1;
     echo "<br>";
+    echo 'Number of rps :' . ($subscription_duration1 - $subscription_duration_prepaid1);
+    echo "<br>";
 
     //$diff_months = Carbon::make($swap_date)->diffInMonths($start_date);
     //$another_subscription_duration = (($duration ) - $paid_failed) - $diff_months;
