@@ -17,6 +17,7 @@ use Carbon\Carbon;
 
 // define variables and set to empty values
 $durationErr = $prepaidErr = $paid_failedErr = $formula = $swapDateErr = $subscriptionSwapDateErr = "";
+$price = 10;
 $duration = $prepaid = $paid_failed = 0;
 $divide_rp = true;
 $swap_date = Carbon::now()->addDays(1)->format('Y-m-d');
@@ -43,6 +44,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $frequency = $_POST["frequency"];
     $formula = $_POST["formula"];
+    $price = $_POST["price"];
     $paid_failed = $_POST["paid_failed"];
     $start_date = $_POST["start_date"];
     $swap_subscription_start_date = $_POST["swap_subscription_start_date"];
@@ -89,6 +91,8 @@ function test_input($data) {
     Paid / failed RPs: <input type="text" name="paid_failed" value="<?php echo $paid_failed;?>">
     <span class="error"> <?php echo $paid_failedErr;?></span>
     <br><br>
+    Price: <input type="text" name="price" value="<?php echo $price;?>">
+    <br><br>
     Start date: <input type="date" id="start_date" name="start_date" value="<?php echo $start_date;?>">
     <br><br>
     Swap date: <input type="date" id="swap_date" name="swap_date" value="<?php echo $swap_date;?>">
@@ -121,7 +125,7 @@ function test_input($data) {
 
 <?php
 
-function create_rps($date, $frequency, $num_rps_created = 1)
+function create_rps($date, $frequency, $num_rps_created, $price, $total)
 {
     if(1 > $num_rps_created)
     {
@@ -129,12 +133,18 @@ function create_rps($date, $frequency, $num_rps_created = 1)
         return;
     }
 
+    $remainer  = $total;
+    $rp_amount = $price;
+
     $i = 0;
     echo  str_repeat("<br>", 1) . "{$num_rps_created} recurring payments will be created with these billing dates:" .str_repeat("<br>", 2);
     while ($i < $num_rps_created) {
         echo "RP:" . ($i+1) . str_repeat("<br>", 1);
-        echo "Billing_date:" . add_date_by_frequency($date, $frequency, $i) . str_repeat("<br>", 2);
+        echo "Billing_date:" . add_date_by_frequency($date, $frequency, $i) . " amount:{$rp_amount}".str_repeat("<br>", 2);
         $i++;
+        $remainer = $remainer - $rp_amount;
+        if($rp_amount > $remainer)
+            $rp_amount = $remainer;
     }
 }
 
@@ -218,19 +228,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 function print_oldest_results()
 {
-    global $first_billing_date, $frequency, $duration, $prepaid, $paid_failed;
+    global $price, $first_billing_date, $frequency, $duration, $prepaid, $paid_failed;
     $subscription_duration  = ($duration - $prepaid) - $paid_failed;
     $number_of_rps = $subscription_duration;
     echo "<h2>Oldest formula:</h2>";
     echo  'Original subscription_duration:'. $subscription_duration. str_repeat("<br>", 1);
     echo  'Original Subscription_duration_prepaid:0' . str_repeat("<br>", 1);
-    create_rps($first_billing_date, $frequency, $number_of_rps);
+    $total = $number_of_rps * $price;
+    create_rps($first_billing_date, $frequency, $number_of_rps, $price, $total);
     echo "<br>";
 }
 
 function print_dec_results()
 {
-    global $divide_rp, $start_date, $subscription_end, $swap_date, $first_billing_date, $frequency, $duration, $prepaid, $paid_failed;
+    global $price, $divide_rp, $start_date, $subscription_end, $swap_date, $first_billing_date, $frequency, $duration, $prepaid, $paid_failed;
     echo "<h2>Dec formula:</h2>";
 
     $diff_subscription_duration = match ($frequency) {
@@ -260,13 +271,14 @@ function print_dec_results()
     echo "<br>";
     echo 'Subscription_duration_prepaid:' . $subscription_duration_prepaid;
     echo "<br>";
-    create_rps($first_billing_date, $frequency, $number_of_rps);
+    $total = $number_of_rps * $price;
+    create_rps($first_billing_date, $frequency, $number_of_rps, $price, $total);
 
 }
 
 function print_current_results()
 {
-    global $divide_rp, $start_date, $subscription_end, $swap_date, $first_billing_date, $frequency, $duration, $prepaid, $paid_failed;
+    global $price, $divide_rp, $start_date, $subscription_end, $swap_date, $first_billing_date, $frequency, $duration, $prepaid, $paid_failed;
     echo "<h2>Current formula:</h2>";
 
     $diff_subscription_duration = match ($frequency) {
@@ -298,12 +310,13 @@ function print_current_results()
     echo "<br>";
     echo 'Subscription_duration_prepaid:' . $subscription_duration_prepaid;
     echo "<br>";
-    create_rps($first_billing_date, $frequency, $number_of_rps);
+    $total = $number_of_rps * $price;
+    create_rps($first_billing_date, $frequency, $number_of_rps, $price, $total);
 }
 
 function print_suggested_results()
 {
-    global $divide_rp, $start_date, $subscription_end, $swap_date, $first_billing_date, $frequency, $duration, $prepaid, $paid_failed;
+    global $price, $divide_rp, $start_date, $subscription_end, $swap_date, $first_billing_date, $frequency, $prepaid, $paid_failed;
     echo "<h2>Suggested formula:</h2>";
     $deduct_period = 1;
     if(15 > Carbon::make($swap_date)->startOfDay()->diffInDays($subscription_end) )
@@ -326,20 +339,23 @@ function print_suggested_results()
         = max(($prepaid + $paid_failed)
         - $diff_months_start_date, 0);
 
-    $number_of_rps = ($subscription_duration - $subscription_duration_prepaid);
+    $number_of_rps = $original_of_rps = ($subscription_duration - $subscription_duration_prepaid);
+    $total = $price * $original_of_rps;
     if($divide_rp)
     {
         if( $prepaid > 1 ){
-            $number_of_rps = ceil($number_of_rps / $prepaid);
+            $number_of_rps = ceil($original_of_rps / $prepaid);
         }
 
         $number_of_rps = ($number_of_rps == 1) ? 0 : $number_of_rps;
     }
+
     echo 'Subscription_duration_formula_calc_from_end_date:' . $subscription_duration;
     echo "<br>";
     echo 'Subscription_duration_prepaid:' . $subscription_duration_prepaid;
     echo "<br>";
-    create_rps($first_billing_date, $frequency, $number_of_rps);
+    $factor = ($number_of_rps >= 1) ? ceil($original_of_rps / $number_of_rps) : 1;
+    create_rps($first_billing_date, $frequency, $number_of_rps, $price * $factor, $total);
 }
 
 ?>
