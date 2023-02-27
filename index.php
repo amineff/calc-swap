@@ -319,7 +319,7 @@ function print_suggested_results()
     global $price, $divide_rp, $start_date, $subscription_end, $swap_date, $first_billing_date, $frequency, $prepaid, $paid_failed;
     echo "<h2>Suggested formula:</h2>";
     $deduct_period = 1;
-    if(30 > Carbon::make($swap_date)->startOfDay()->diffInDays($subscription_end) )
+    if(31 > Carbon::make($swap_date)->startOfDay()->diffInDays($subscription_end) )
     {
         $deduct_period = 0;
     }
