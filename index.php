@@ -319,9 +319,18 @@ function print_suggested_results()
     global $price, $divide_rp, $start_date, $subscription_end, $swap_date, $first_billing_date, $frequency, $prepaid, $paid_failed;
     echo "<h2>Suggested formula:</h2>";
     $deduct_period = 1;
+
+
+    //echo  $settled;
+    $diff_months_start_date= Carbon::make($swap_date)->startOfDay()->diffInMonths($start_date);
+    $subscription_duration_prepaid
+        = max(($prepaid + $paid_failed)
+        - $diff_months_start_date, 0);
+
     if(31 > Carbon::make($swap_date)->startOfDay()->diffInDays($subscription_end) )
     {
         $deduct_period = 0;
+        $subscription_duration_prepaid = 0;
     }
 
     $diff_subscription_duration = match ($frequency) {
@@ -331,14 +340,8 @@ function print_suggested_results()
         'yearly' =>  Carbon::make($swap_date)->startOfDay()->diffInYears($subscription_end),
     };
 
-    //echo  $settled;
-    $diff_months_start_date= Carbon::make($swap_date)->startOfDay()->diffInMonths($start_date);
 
     $subscription_duration = ($diff_subscription_duration);
-    $subscription_duration_prepaid
-        = max(($prepaid + $paid_failed)
-        - $diff_months_start_date, 0);
-
     $number_of_rps = $original_of_rps = ($subscription_duration - $subscription_duration_prepaid);
     $total = $price * $original_of_rps;
     if($divide_rp)
