@@ -327,7 +327,7 @@ function print_suggested_results()
         = max(($prepaid + $paid_failed)
         - $diff_months_start_date, 0);
 
-    if(31 > Carbon::make($swap_date)->startOfDay()->diffInDays($subscription_end) )
+    if(30 > Carbon::make($swap_date)->startOfDay()->diffInDays($subscription_end) )
     {
         $deduct_period = 0;
         $subscription_duration_prepaid = 0;
