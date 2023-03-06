@@ -359,7 +359,7 @@ function print_suggested_results()
     echo "<br>";
 
     $first_billing_date = add_date_by_frequency(
-        $start_date,
+        $swap_subscription_start_date,
         $frequency,
         $subscription_duration_prepaid
     );
