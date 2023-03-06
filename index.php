@@ -183,16 +183,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     echo str_repeat("<br>", 2);
     echo 'Subscription_start:' . $start_date . str_repeat("<br>", 1);
     echo 'Subscription_end:' . $subscription_end . str_repeat("<br>", 2);
-
+/*
     $first_billing_date = add_date_by_frequency(
-        $swap_subscription_start_date,
+        $start_date,
         $frequency,
         $prepaid
     );
 
     echo 'First_billing_date:' . $first_billing_date . str_repeat("<br>", 2);
 
-
+*/
     $time = Carbon::make($swap_date)->diff($start_date);
     $diff_months = ($time->y ? $time->y * 12 : $time->m);
     echo "Diffrence between subscription_start date and swap date {$diff_months}:months {$time->d}:days";
@@ -359,7 +359,7 @@ function print_suggested_results()
     echo "<br>";
 
     $first_billing_date = add_date_by_frequency(
-        $swap_subscription_start_date,
+        $start_date,
         $frequency,
         $subscription_duration_prepaid
     );
