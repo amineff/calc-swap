@@ -316,7 +316,7 @@ function print_current_results()
 
 function print_suggested_results()
 {
-    global $price, $divide_rp, $start_date, $subscription_end, $swap_date, $first_billing_date, $frequency, $prepaid, $paid_failed;
+    global $swap_subscription_start_date, $price, $divide_rp, $start_date, $subscription_end, $swap_date, $first_billing_date, $frequency, $prepaid, $paid_failed;
     echo "<h2>Suggested formula:</h2>";
     $deduct_period = 1;
 
@@ -357,8 +357,16 @@ function print_suggested_results()
     echo "<br>";
     echo 'Subscription_duration_prepaid:' . $subscription_duration_prepaid;
     echo "<br>";
+
+    $first_billing_date = add_date_by_frequency(
+        $swap_subscription_start_date,
+        $frequency,
+        $subscription_duration_prepaid
+    );
+
+
     $factor = ($number_of_rps >= 1) ? ceil($original_of_rps / $number_of_rps) : 1;
-    create_rps($first_billing_date, $frequency, $number_of_rps, $price * $factor, $total);
+    create_rps($first_billing_date, $frequency, $number_of_rps, $price, $total);
 }
 
 ?>
